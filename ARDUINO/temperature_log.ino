@@ -77,14 +77,13 @@ void loop() {
     digitalWrite(yellow, LOW);
     delay(50);
     digitalWrite(yellow, HIGH);
-  } else if (!btnState && !flag) {
-    flag = true;
   }
 
   String read1;
   if (Serial.available() > 0) {
     read1 = Serial.readString();
     Serial.println(read1);
+    flag = true;
   }
 
   if (read1 == "not ok") {
@@ -96,7 +95,7 @@ void loop() {
     }
     digitalWrite(yellow, LOW);
   }
-    if (read1 == "error") {
+  if (read1 == "error") {
     for(int i = 0; i < 10; i++) {
       digitalWrite(yellow, HIGH);
       delay(50);
@@ -104,7 +103,7 @@ void loop() {
       delay(50);
     }
   }
-    if (read1 == "ok") {
+  if (read1 == "ok") {
     for(int i = 0; i < 10; i++) {
       digitalWrite(green, HIGH);
       delay(50);
