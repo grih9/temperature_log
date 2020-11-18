@@ -5,37 +5,36 @@ import cv2
 import requests
 import json
 
-ser=serial.Serial("/dev/ttyACM0",9600)  #change ACM number as found from ls /dev/tty/ACM*
+ser=serial.Serial("/dev/ttyACM0",9600)
 ser.baudrate=9600
+
+id = 7
+names = ['', 'Фирсов Даниил Анатольевич', 'Бубляев Алексей Вячеславович', 'Коршунов Кирилл Владимирович', 'Толстиков Григорий Николаевич', 'Крайнов Александр Константинович',
+                 'ALEXANDR']  
+logins = {names[1]: "daniilXT", names[2]: "whoopzee", names[3]: "kir0108", names[4]: "grih9", names[5]: "alexandr"}
 
 while True:
     read_ser=ser.readline()
     if(read_ser.decode("utf-8")[0:-2] == "start"):
         flag = True
         recognizer = cv2.face.LBPHFaceRecognizer_create()
-        recognizer.read('trainer/trainer.yml')  # load trained model
+        recognizer.read('trainer/trainer.yml')
         cascadePath = "haarcascade_frontalface_default.xml"
         faceCascade = cv2.CascadeClassifier(cascadePath)
 
         font = cv2.FONT_HERSHEY_SIMPLEX
         
-        # iniciate id counter, the number of persons you want to include
-        id = 7  # two persons (e.g. Jacob, Jack)
-        names = ['', 'Фирсов Даниил Анатольевич', 'Бубляев Алексей Вячеславович', 'Коршунов Кирилл Владимирович', 'Толстиков Григорий Николаевич', 'Крайнов Александр Константинович',
-                 'ALEXANDR']  # key in names, start from the second place, leave first empty   
-        # Initialize and start realtime video capture
         cam = cv2.VideoCapture('http://192.168.0.106:8081/')
-        cam.set(3, 640)  # set video widht
-        cam.set(4, 480)  # set video height
+        cam.set(3, 640)
+        cam.set(4, 480)
 
-        # Define min window size to be recognized as a face
+
         minW = 0.1 * cam.get(3)
         minH = 0.1 * cam.get(4)
 
         count = 0
         counter1 = {2 : 0, 3 : 0, 4 : 0, 5 : 0, 'unknown' : 0}
         counter2 = {2 : 0, 3 : 0, 4 : 0, 5 : 0, 'unknown' : 0}
-        logins = {names[1]: "daniilXT", names[2]: "whoopzee", names[3]: "kir0108", names[4]: "grih9", names[5]: "alexandr"}
         confidAvg = 0
         
         while count < 30:
@@ -62,14 +61,6 @@ while True:
                 counter1[id] += 1
                 counter2[id] += int(confidence)
                 count = count + 1
-            #cv2.putText(img, str(id), (x + 5, y - 5), font, 1, (255, 255, 255), 2)
-            #cv2.putText(img, str(confidence), (x + 5, y + h - 5), font, 1, (255, 255, 0), 1)
-        #cv2.imshow('camera', img)
-        #k = cv2.waitKey(2) & 0xff  # Press 'ESC' for exiting video
-        #if k == 27:
-            #break
-        # Do a bit of cleanup
-        #print("\n [INFO] Exiting Program and cleanup stuff")
         cam.release()
         cv2.destroyAllWindows()
         
