@@ -24,7 +24,7 @@ while True:
 
         font = cv2.FONT_HERSHEY_SIMPLEX
         
-        cam = cv2.VideoCapture('http://192.168.0.106:8081/')
+        cam = cv2.VideoCapture('http://192.168.0.105:8081/')
         cam.set(3, 640)
         cam.set(4, 480)
 
@@ -71,7 +71,7 @@ while True:
                 maximumID = elem
                 break
         confidAvg = counter2[maximumID] / counter1[maximumID]
-        if (maxValue < 30 or maximumID == "unknown"):
+        if (maxValue < 30 and maximumID != "unknown"):
             print('Недостаточно совпадений.' + 'Наиболее подходящий ' + str(names[maximumID]) + ' confidence = ' + str(int(confidAvg)) + ' ' + str(maxValue) + "/30")
             print('Человек распознан верно? y-Да n-Нет')
             a = str(input())
@@ -96,25 +96,29 @@ while True:
                         break
                 confidAvg = counter2[maximumID] / counter1[maximumID]
                 maxValue = max(counter1.values())
-                print('Может быть это ' + str(names[maximumID]) + ' confidence = ' + str(int(confidAvg)))
-                print('Человек распознан верно? y-Да n-Нет')
-                a = str(input())
-                while (a != 'y' and a != 'n'):
+                if (maximumID == "unknown"):
+                    print("Unknown user")
+                    flag = False
+                else:
+                    print('Может быть это ' + str(names[maximumID]) + ' confidence = ' + str(int(confidAvg)))
+                    print('Человек распознан верно? y-Да n-Нет')
                     a = str(input())
-                if a == 'y':
-                    login = logins[names[maximumID]]
-                    response = requests.get("https://alfalfa-project.herokuapp.com/api/auth", json = {"login": login, "password": login})
-                    if (response.status_code != 200):
-                        print('Ошбика аутентификации')
+                    while (a != 'y' and a != 'n'):
+                        a = str(input())
+                    if a == 'y':
+                        login = logins[names[maximumID]]
+                        response = requests.get("https://alfalfa-project.herokuapp.com/api/auth", json = {"login": login, "password": login})
+                        if (response.status_code != 200):
+                            print('Ошбика аутентификации')
+                            flag = False
+                            token = ""
+                        else:
+                            token = response.content.decode("utf-8")
+                    else:
                         flag = False
                         token = ""
-                    else:
-                        token = response.content.decode("utf-8")
-                else:
-                    flag = False
-                    token = ""
-                    login = ""
-        elif (confidAvg >= 50 and maxValue == 30):
+                        login = ""
+        elif (confidAvg >= 50 and maxValue == 30 and maximumID != "unknown"):
             print('name = ', names[maximumID], ' confidence = ', int(confidAvg), ' ', maxValue,'/30')
             login = logins[names[maximumID]]
             response = requests.get("https://alfalfa-project.herokuapp.com/api/auth", json = {"login": login, "password": login})
@@ -124,7 +128,46 @@ while True:
                 token = ""
             else:
                 token = response.content.decode("utf-8")
+        elif maximumID == "unknown":
+            print("Unknown user")
+            if maxValue == 30:
+                flag = False
+                token = ""
+            else:
+                counter1[maximumID] = 0
+                maxValue = max(counter1.values())
+                maximumID = 0
+                for elem in counter1:
+                    if counter1[elem] == maxValue:
+                        maximumID = elem
+                        break
+                confidAvg = counter2[maximumID] / counter1[maximumID]
+                maxValue = max(counter1.values())
+                if (maximumID == "unknown"):
+                    print("Unknown user")
+                    flag = False
+                else:
+                    print('Может быть это ' + str(names[maximumID]) + ' confidence = ' + str(int(confidAvg)))
+                    print('Человек распознан верно? y-Да n-Нет')
+                    a = str(input())
+                    while (a != 'y' and a != 'n'):
+                        a = str(input())
+                    if a == 'y':
+                        login = logins[names[maximumID]]
+                        response = requests.get("https://alfalfa-project.herokuapp.com/api/auth", json = {"login": login, "password": login})
+                        if (response.status_code != 200):
+                            print('Ошбика аутентификации')
+                            flag = False
+                            token = ""
+                        else:
+                            token = response.content.decode("utf-8")
+                    else:
+                        flag = False
+                        token = ""
+                        login = ""
+            
         else:
+            print('Низкий уровень распознавания.' + 'Наиболее подходящий ' + str(names[maximumID]) + ' confidence = ' + str(int(confidAvg)) + ' ' + str(maxValue) + "/30")
             print('Человек распознан верно? y-Да n-Нет')
             a = str(input())
             while (a != 'y' and a != 'n'):
@@ -139,7 +182,6 @@ while True:
                 else:
                     token = response.content.decode("utf-8")
             else:
-                print('Низкий уровень распознавания.' + 'Наиболее подходящий ' + str(names[maximumID]) + ' confidence = ' + str(int(confidAvg)) + ' ' + str(maxValue) + "/30")
                 flag = False
                 token = ""
                 login = ""
